@@ -100,9 +100,9 @@
     (uvia_drill 0.1)
   )
 
-  (gr_line (start 100 100) (end 100 134) (layer Edge.Cuts) (width 0.15))
-  (gr_line (start 157 134) (end 157 100) (layer Edge.Cuts) (width 0.15))
-  (gr_line (start 100 134) (end 157 134) (layer Edge.Cuts) (width 0.15) (tstamp 5F5F8C3A))
-  (gr_line (start 100 100) (end 157 100) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 100 100) (end 100 134) (layer B.Cu) (width 0.15))
+  (gr_line (start 157 134) (end 157 100) (layer B.Cu) (width 0.15))
+  (gr_line (start 100 134) (end 157 134) (layer B.Cu) (width 0.15) (tstamp 5F5F8C3A))
+  (gr_line (start 100 100) (end 157 100) (layer B.Cu) (width 0.15))
 
 )
