@@ -1,0 +1,48 @@
+{
+    "configurations": [
+        {
+            "name": "!!! WARNING !!! AUTO-GENERATED FILE, PLEASE DO NOT MODIFY IT AND USE https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/timvosch/src/mfm-micro/include",
+                "/home/timvosch/src/mfm-micro/src",
+                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Include",
+                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Device/ST/STM32L0xx/Include",
+                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/STM32L0xx_HAL_Driver/Inc",
+                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0",
+                "/home/timvosch/.platformio/packages/tool-unity",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/home/timvosch/src/mfm-micro/include",
+                    "/home/timvosch/src/mfm-micro/src",
+                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Include",
+                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Device/ST/STM32L0xx/Include",
+                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/STM32L0xx_HAL_Driver/Inc",
+                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0",
+                    "/home/timvosch/.platformio/packages/tool-unity",
+                    ""
+                ]
+            },
+            "defines": [
+                "F_CPU=48000000L",
+                "",
+                "PLATFORMIO=50001",
+                "STM32L072xB",
+                ""
+            ],
+            "intelliSenseMode": "clang-x64",
+            "compilerPath": "/home/timvosch/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "-mthumb",
+                "-mcpu=cortex-m0",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}

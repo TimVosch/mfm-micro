@@ -1,0 +1,24 @@
+{
+  "build": {
+    "cpu": "cortex-m0",
+    "extra_flags": "-DSTM32L072xB",
+    "f_cpu": "48000000L",
+    "mcu": "stm32l072cbt6",
+    "product_line": "STM32L072xB"
+  },
+  "connectivity": [],
+  "debug": {
+    "openocd_target": "stm32l0x",
+    "svd_path": "STM32L072x.svd"
+  },
+  "frameworks": ["cmsis", "stm32cube", "libopencm3", "zephyr"],
+  "name": "MFM-MICRO",
+  "upload": {
+    "maximum_ram_size": 20480,
+    "maximum_size": 131072,
+    "protocol": "blackmagic",
+    "protocols": ["stlink", "blackmagic"]
+  },
+  "url": "https://github.com/timvosch/mfm-micro",
+  "vendor": "Pollex"
+}
