@@ -8,10 +8,11 @@
             "includePath": [
                 "/home/timvosch/src/mfm-micro/include",
                 "/home/timvosch/src/mfm-micro/src",
-                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Include",
-                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Device/ST/STM32L0xx/Include",
-                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/STM32L0xx_HAL_Driver/Inc",
-                "/home/timvosch/src/mfm-micro/lib/STM32CubeL0",
+                "/home/timvosch/src/mfm-micro/lib/CMSIS/Include",
+                "/home/timvosch/src/mfm-micro/lib/CMSIS/Device/ST/STM32L0xx/Include",
+                "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver/Inc",
+                "/home/timvosch/src/mfm-micro/lib/CMSIS",
+                "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver",
                 "/home/timvosch/.platformio/packages/tool-unity",
                 ""
             ],
@@ -20,10 +21,11 @@
                 "path": [
                     "/home/timvosch/src/mfm-micro/include",
                     "/home/timvosch/src/mfm-micro/src",
-                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Include",
-                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/CMSIS/Device/ST/STM32L0xx/Include",
-                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0/Drivers/STM32L0xx_HAL_Driver/Inc",
-                    "/home/timvosch/src/mfm-micro/lib/STM32CubeL0",
+                    "/home/timvosch/src/mfm-micro/lib/CMSIS/Include",
+                    "/home/timvosch/src/mfm-micro/lib/CMSIS/Device/ST/STM32L0xx/Include",
+                    "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver/Inc",
+                    "/home/timvosch/src/mfm-micro/lib/CMSIS",
+                    "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver",
                     "/home/timvosch/.platformio/packages/tool-unity",
                     ""
                 ]
