@@ -8,6 +8,7 @@
             "includePath": [
                 "/home/timvosch/src/mfm-micro/include",
                 "/home/timvosch/src/mfm-micro/src",
+                "/home/timvosch/src/mfm-micro/boards/mfm-micro/include",
                 "/home/timvosch/src/mfm-micro/lib/CMSIS/Include",
                 "/home/timvosch/src/mfm-micro/lib/CMSIS/Device/ST/STM32L0xx/Include",
                 "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver/Inc",
@@ -21,6 +22,7 @@
                 "path": [
                     "/home/timvosch/src/mfm-micro/include",
                     "/home/timvosch/src/mfm-micro/src",
+                    "/home/timvosch/src/mfm-micro/boards/mfm-micro/include",
                     "/home/timvosch/src/mfm-micro/lib/CMSIS/Include",
                     "/home/timvosch/src/mfm-micro/lib/CMSIS/Device/ST/STM32L0xx/Include",
                     "/home/timvosch/src/mfm-micro/lib/STM32L0xx_HAL_Driver/Inc",

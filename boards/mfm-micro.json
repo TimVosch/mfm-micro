@@ -1,7 +1,7 @@
 {
   "build": {
     "cpu": "cortex-m0plus",
-    "extra_flags": "-DSTM32L072xx",
+    "extra_flags": "-DSTM32L072xx -I./boards/mfm-micro/include",
     "f_cpu": "48000000L",
     "mcu": "stm32l072cbt6",
     "product_line": "STM32L072xx"
