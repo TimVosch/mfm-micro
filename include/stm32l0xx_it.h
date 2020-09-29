@@ -20,6 +20,9 @@
 #ifndef __STM32L0xx_IT_H
 #define __STM32L0xx_IT_H
 
+#include <stm32l0xx_hal.h>
+#include <stm32l0xx_hal_tim.h>
+
 #ifdef __cplusplus
 extern "C"
 {
