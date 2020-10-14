@@ -1,25 +1,5 @@
 #include "i2c_driver.hpp"
 
-// void init_timer()
-// {
-//   // Set TIMER 6 to us
-//   uint8_t psc = SystemCoreClock / 1e6 - 1;
-//   __HAL_RCC_TIM6_CLK_ENABLE();
-//   TIM6->SR = 0;
-//   TIM6->PSC = psc;
-//   TIM6->CR1 = TIM_CR1_OPM;
-// }
-
-// void delay_us(uint16_t us)
-// {
-//   TIM6->SR = 0;
-//   TIM6->ARR = us;
-//   TIM6->CNT = 0;
-//   TIM6->CR1 |= TIM_CR1_CEN;
-//   while (!(TIM6->SR & TIM_SR_UIF))
-//     ;
-// }
-
 void init_timer()
 {
   // Set TIMER 6 to us
@@ -71,7 +51,8 @@ void I2CDriver::clear_scl()
  */
 void I2CDriver::clock_stretch()
 {
-  // Wait for clock to actually go high
+  // Wait for clock to go high
+  // or the timeout timer to trigger
   TIM6->SR = 0;
   TIM6->ARR = timing->clock_stretch;
   TIM6->CNT = 0;
@@ -188,16 +169,41 @@ I2C_RESPONSE I2CDriver::write_byte(uint8_t data)
 // Public functions
 //
 
-void I2CDriver::write(uint8_t addr, uint8_t data)
+/**
+ * @brief Write bytes to a slave
+ * 
+ * @param addr Slave address
+ * @param data_ptr Pointer to data start
+ * @param size Amount of data
+ * @return I2C_RESPONSE
+ */
+I2C_RESPONSE I2CDriver::write(uint8_t addr, uint8_t *data_ptr, uint8_t size)
 {
+  uint8_t *data_ptr_end = data_ptr + size;
   I2C_RESPONSE res = select(addr, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+
+  // Loop while slave ACKS and data end not reached
+  while (res == I2C_RESPONSE_ACK && data_ptr < data_ptr_end)
   {
-    stop_condition();
-    return;
+    res = write_byte(*data_ptr++);
   }
-  write_byte(data);
+
+  // If end of data was reached, then stop and return ACK,
+  // If NACk was received, then stop and return NACK.
   stop_condition();
+  return res;
+}
+
+/**
+ * @brief Write a single byte to a slave
+ * 
+ * @param addr Slave address
+ * @param data Data to write
+ * @return I2C_RESPONSE 
+ */
+I2C_RESPONSE I2CDriver::write_byte(uint8_t addr, uint8_t data)
+{
+  return write(addr, &data, 1);
 }
 
 //

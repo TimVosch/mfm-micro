@@ -35,7 +35,8 @@ public:
   I2CDriver(uint32_t SCL_Pin, GPIO_TypeDef *SCL_Port, uint32_t SDA_Pin, GPIO_TypeDef *SDA_Port, I2C_TIMING *timing);
   ~I2CDriver();
 
-  void write(uint8_t addr, uint8_t data);
+  I2C_RESPONSE write_byte(uint8_t addr, uint8_t data);
+  I2C_RESPONSE write(uint8_t addr, uint8_t *data_ptr, uint8_t size);
 
 private:
   uint32_t SCL_Pin;

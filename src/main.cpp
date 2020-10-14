@@ -95,9 +95,9 @@ int main(void)
 
   for (;;)
   {
-    i2c.write(0x70, 0x1);
+    i2c.write_byte(0x70, 0x1);
     HAL_Delay(2000);
-    i2c.write(0x70, 0x0);
+    i2c.write_byte(0x70, 0x0);
     HAL_Delay(2000);
   }
 }
