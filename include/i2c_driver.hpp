@@ -43,7 +43,6 @@ private:
   GPIO_TypeDef *SCL_Port;
   uint32_t SDA_Pin;
   GPIO_TypeDef *SDA_Port;
-  uint8_t cyle_us;
   I2C_TIMING *timing;
   I2C_DRIVER_STATE state;
 

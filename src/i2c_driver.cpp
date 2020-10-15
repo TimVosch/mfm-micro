@@ -54,7 +54,8 @@ void I2CDriver::clock_stretch()
   // Wait for clock to go high
   // or the timeout timer to trigger
   TIM6->SR = 0;
-  TIM6->ARR = timing->clock_stretch;
+  // TIM6->ARR = timing->clock_stretch;
+  TIM6->ARR = 0xFF;
   TIM6->CNT = 0;
   TIM6->CR1 |= TIM_CR1_CEN;
   while (!read_scl() && !(TIM6->SR & TIM_SR_UIF))
@@ -218,7 +219,6 @@ I2CDriver::I2CDriver(uint32_t SCL_Pin,
                                            SCL_Port{SCL_Port},
                                            SDA_Pin{SDA_Pin},
                                            SDA_Port{SDA_Port},
-                                           cyle_us{10},
                                            timing{timing},
                                            state{I2C_DRIVER_STATE_STOPPED}
 {
