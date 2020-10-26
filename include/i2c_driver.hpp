@@ -53,10 +53,10 @@ private:
   I2C_RESPONSE get_ack();
   void clock_stretch();
 
-  void set_scl();
-  void clear_scl();
-  void set_sda();
-  void clear_sda();
+  void scl_high();
+  void scl_low();
+  void sda_high();
+  void sda_low();
   GPIO_PinState read_sda();
   GPIO_PinState read_scl();
 };

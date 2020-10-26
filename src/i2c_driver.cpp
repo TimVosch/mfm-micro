@@ -29,19 +29,19 @@ GPIO_PinState I2CDriver::read_scl()
 {
   return HAL_GPIO_ReadPin(this->SCL_Port, this->SCL_Pin);
 }
-void I2CDriver::set_sda()
+void I2CDriver::sda_high()
 {
   HAL_GPIO_WritePin(this->SDA_Port, this->SDA_Pin, GPIO_PIN_SET);
 }
-void I2CDriver::set_scl()
+void I2CDriver::scl_high()
 {
   HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_SET);
 }
-void I2CDriver::clear_sda()
+void I2CDriver::sda_low()
 {
   HAL_GPIO_WritePin(this->SDA_Port, this->SDA_Pin, GPIO_PIN_RESET);
 }
-void I2CDriver::clear_scl()
+void I2CDriver::scl_low()
 {
   HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_RESET);
 }
@@ -67,23 +67,23 @@ void I2CDriver::start_condition()
   // Repeated start
   if (state == I2C_DRIVER_STATE_STARTED)
   {
-    set_sda();
-    set_scl();
+    sda_high();
+    scl_high();
     delay_us(timing->start_repeat_setup);
   }
 
   // Start condition
-  clear_sda();
+  sda_low();
   delay_us(timing->start_hold);
-  clear_scl();
+  scl_low();
 }
 
 void I2CDriver::stop_condition()
 {
-  clear_sda();
-  set_scl();
+  sda_low();
+  scl_high();
   delay_us(timing->stop_setup);
-  set_sda();
+  sda_high();
 
   // Avoid buslock condition
   delay_us(timing->bus_free / 2);
@@ -91,12 +91,12 @@ void I2CDriver::stop_condition()
   {
     for (uint8_t i = 0; i < 8; i++)
     {
-      set_scl();
+      scl_high();
       delay_us(timing->high_period);
-      clear_scl();
+      scl_low();
       delay_us(timing->low_period);
     }
-    set_scl();
+    scl_high();
   }
 
   // Force us to wait before being able to start again
@@ -113,13 +113,13 @@ I2C_RESPONSE I2CDriver::get_ack()
 {
 
   // 9th Clock cycle
-  set_sda();
-  set_scl();
+  sda_high();
+  scl_high();
   clock_stretch(); // Allow clock stretching before ack
   delay_us(timing->high_period / 2);
   GPIO_PinState sda = read_sda();
   delay_us(timing->high_period / 2);
-  clear_scl();
+  scl_low();
   delay_us(timing->data_hold);
 
   if (sda == GPIO_PIN_RESET)
@@ -146,19 +146,19 @@ I2C_RESPONSE I2CDriver::write_byte(uint8_t data)
     // Setup data line
     if (data & 0x80)
     {
-      set_sda();
+      sda_high();
     }
     else
     {
-      clear_sda();
+      sda_low();
     }
     data <<= 1;
 
     // Clock in data
     delay_us(timing->data_setup);
-    set_scl();
+    scl_high();
     delay_us(timing->high_period);
-    clear_scl();
+    scl_low();
     delay_us(timing->data_hold);
   }
 
