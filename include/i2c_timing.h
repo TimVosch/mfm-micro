@@ -29,4 +29,14 @@ typedef struct
                              .data_setup = 1,         \
                              .clock_stretch = 100};
 
+#define I2C_TIMING_SLOW {.bus_free = 10,           \
+                         .start_hold = 8,          \
+                         .start_repeat_setup = 10, \
+                         .stop_setup = 8,          \
+                         .low_period = 10,         \
+                         .high_period = 8,         \
+                         .data_hold = 5,           \
+                         .data_setup = 5,          \
+                         .clock_stretch = 200};
+
 #endif // _I2C_TIMING_H_

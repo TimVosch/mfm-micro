@@ -36,6 +36,7 @@ void I2CDriver::sda_high()
 void I2CDriver::scl_high()
 {
   HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_SET);
+  clock_stretch();
 }
 void I2CDriver::sda_low()
 {
@@ -111,11 +112,11 @@ void I2CDriver::stop_condition()
  */
 I2C_RESPONSE I2CDriver::get_ack()
 {
-
+  delay_us(30);
   // 9th Clock cycle
   sda_high();
   scl_high();
-  clock_stretch(); // Allow clock stretching before ack
+  // clock_stretch(); // Allow clock stretching before ack
   delay_us(timing->high_period / 2);
   GPIO_PinState sda = read_sda();
   delay_us(timing->high_period / 2);

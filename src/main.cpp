@@ -86,17 +86,16 @@ int main(void)
 {
   SystemClock_Config();
   HAL_Init();
-
   initGPIO();
   i2c_init();
 
-  I2C_TIMING standard = I2C_TIMING_STANDARD;
+  I2C_TIMING standard = I2C_TIMING_SLOW;
   I2CDriver i2c(I2C_SCL_Pin, I2C_SCL_Port, I2C_SDA_Pin, I2C_SDA_Port, &standard);
 
-  uint8_t buf[] = {0xDE, 0xAD, 0xBE, 0xEF};
+  uint16_t time = 1000;
   for (;;)
   {
-    i2c.write(0x70, buf, 4);
+    i2c.write(0x70, (uint8_t *)&time, 2);
     HAL_Delay(2000);
     i2c.write_byte(0x70, 0x0);
     HAL_Delay(2000);
