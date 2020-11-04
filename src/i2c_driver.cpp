@@ -19,7 +19,7 @@ void delay_us(uint16_t us)
 }
 
 //
-// Utility functions
+// ---- Utility functions ----
 //
 GPIO_PinState I2CDriver::read_sda()
 {
@@ -36,7 +36,6 @@ void I2CDriver::sda_high()
 void I2CDriver::scl_high()
 {
   HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_SET);
-  clock_stretch();
 }
 void I2CDriver::sda_low()
 {
@@ -46,6 +45,10 @@ void I2CDriver::scl_low()
 {
   HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_RESET);
 }
+
+//
+// ---- private functions ----
+//
 
 /**
  * Wait for SCL to go high
@@ -63,10 +66,10 @@ void I2CDriver::clock_stretch()
     ;
 }
 
-void I2CDriver::start_condition()
+void I2CDriver::start_condition(bool restart)
 {
   // Repeated start
-  if (state == I2C_DRIVER_STATE_STARTED)
+  if (restart)
   {
     sda_high();
     scl_high();
@@ -100,9 +103,6 @@ void I2CDriver::stop_condition()
     scl_high();
   }
 
-  // Force us to wait before being able to start again
-  // delay_us(timing->bus_free);
-
   // Update state
   state = I2C_DRIVER_STATE_STOPPED;
 }
@@ -112,11 +112,10 @@ void I2CDriver::stop_condition()
  */
 I2C_RESPONSE I2CDriver::get_ack()
 {
-  delay_us(30);
   // 9th Clock cycle
   sda_high();
   scl_high();
-  // clock_stretch(); // Allow clock stretching before ack
+  clock_stretch(); // Allow clock stretching before ack
   delay_us(timing->high_period / 2);
   GPIO_PinState sda = read_sda();
   delay_us(timing->high_period / 2);
@@ -133,14 +132,58 @@ I2C_RESPONSE I2CDriver::get_ack()
 I2C_RESPONSE I2CDriver::select(uint8_t addr, uint8_t rw)
 {
   uint8_t data = (addr << 1) | rw;
-  start_condition();
-  return write_byte(data);
+  return write(data);
 }
 
-I2C_RESPONSE I2CDriver::write_byte(uint8_t data)
-{
-  state = I2C_DRIVER_STATE_WRITING;
+//
+// ---- Public functions ----
+//
 
+void I2CDriver::ack()
+{
+
+  // ACk message
+  sda_low();
+  scl_high();
+  delay_us(timing->high_period);
+  scl_low();
+  sda_high();
+}
+
+void I2CDriver::nack()
+{
+  // ACk message
+  sda_high();
+  scl_high();
+  delay_us(timing->high_period);
+  scl_low();
+}
+
+I2C_RESPONSE I2CDriver::start(uint8_t addr, I2C_RW rw)
+{
+  start_condition(false);
+  return select(addr, rw);
+}
+
+I2C_RESPONSE I2CDriver::restart(uint8_t addr, I2C_RW rw)
+{
+  start_condition(true);
+  return select(addr, rw);
+}
+
+void I2CDriver::stop()
+{
+  stop_condition();
+}
+
+/**
+ * @brief Write a byte to the slave
+ * 
+ * @param byte The byte to send
+ * @return I2C_RESPONSE
+ */
+I2C_RESPONSE I2CDriver::write(uint8_t data)
+{
   // Send 8 bits
   for (int i = 0; i < 8; i++)
   {
@@ -167,45 +210,31 @@ I2C_RESPONSE I2CDriver::write_byte(uint8_t data)
   return get_ack();
 }
 
-//
-// Public functions
-//
-
 /**
- * @brief Write bytes to a slave
+ * @brief Read a byte from the slave
  * 
- * @param addr Slave address
- * @param data_ptr Pointer to data start
- * @param size Amount of data
+ * @param byte The byte to send
  * @return I2C_RESPONSE
  */
-I2C_RESPONSE I2CDriver::write(uint8_t addr, uint8_t *data_ptr, uint8_t size)
+uint8_t I2CDriver::read()
 {
-  uint8_t *data_ptr_end = data_ptr + size;
-  I2C_RESPONSE res = select(addr, I2C_RW_WRITE);
-
-  // Loop while slave ACKS and data end not reached
-  while (res == I2C_RESPONSE_ACK && data_ptr < data_ptr_end)
+  uint8_t data = 0;
+  for (uint8_t bit_pos = 8; bit_pos > 0; bit_pos--)
   {
-    res = write_byte(*data_ptr++);
+    delay_us(timing->low_period);
+    scl_high();
+    clock_stretch();
+
+    // Insert high bit
+    if (read_sda())
+    {
+      data |= 1 << (bit_pos - 1);
+    }
+    delay_us(timing->high_period);
+    scl_low();
   }
 
-  // If end of data was reached, then stop and return ACK,
-  // If NACk was received, then stop and return NACK.
-  stop_condition();
-  return res;
-}
-
-/**
- * @brief Write a single byte to a slave
- * 
- * @param addr Slave address
- * @param data Data to write
- * @return I2C_RESPONSE 
- */
-I2C_RESPONSE I2CDriver::write_byte(uint8_t addr, uint8_t data)
-{
-  return write(addr, &data, 1);
+  return data;
 }
 
 //

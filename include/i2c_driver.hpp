@@ -35,8 +35,13 @@ public:
   I2CDriver(uint32_t SCL_Pin, GPIO_TypeDef *SCL_Port, uint32_t SDA_Pin, GPIO_TypeDef *SDA_Port, I2C_TIMING *timing);
   ~I2CDriver();
 
-  I2C_RESPONSE write_byte(uint8_t addr, uint8_t data);
-  I2C_RESPONSE write(uint8_t addr, uint8_t *data_ptr, uint8_t size);
+  I2C_RESPONSE start(uint8_t addr, I2C_RW rw);
+  I2C_RESPONSE restart(uint8_t addr, I2C_RW rw);
+  void stop();
+  void ack();
+  void nack();
+  I2C_RESPONSE write(uint8_t byte);
+  uint8_t read();
 
 private:
   uint32_t SCL_Pin;
@@ -47,8 +52,7 @@ private:
   I2C_DRIVER_STATE state;
 
   I2C_RESPONSE select(uint8_t addr, uint8_t rw);
-  I2C_RESPONSE write_byte(uint8_t data);
-  void start_condition();
+  void start_condition(bool restart);
   void stop_condition();
   I2C_RESPONSE get_ack();
   void clock_stretch();
