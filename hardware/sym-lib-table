@@ -1,4 +1,5 @@
 (sym_lib_table
   (lib (name tp4056)(type Legacy)(uri ${KIPRJMOD}/lib/tp4056.lib)(options "")(descr ""))
   (lib (name pollex-logo)(type Legacy)(uri ${KIPRJMOD}/lib/pollex-logo.lib)(options "")(descr ""))
+  (lib (name mfm-micro-rescue)(type Legacy)(uri ${KIPRJMOD}/mfm-micro-rescue.lib)(options "")(descr ""))
 )

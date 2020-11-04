@@ -170,7 +170,7 @@ USB_CONN_D-
 Text GLabel 1200 1200 2    50   Input ~ 0
 USB_CONN_D+
 $Comp
-L Connector:USB_B_Mini J1
+L mfm-micro-rescue:USB_B_Mini-Connector J1
 U 1 1 5F55AD22
 P 900 1200
 F 0 "J1" H 957 1667 50  0000 C CNN
