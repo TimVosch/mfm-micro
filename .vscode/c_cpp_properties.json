@@ -34,8 +34,7 @@
             },
             "defines": [
                 "F_CPU=48000000L",
-                "",
-                "PLATFORMIO=50001",
+                "PLATFORMIO=50002",
                 "STM32L072xx",
                 ""
             ],
