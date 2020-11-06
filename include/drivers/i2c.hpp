@@ -30,10 +30,12 @@ public:
   I2C_RESPONSE start(uint8_t addr, I2C_RW rw);
   I2C_RESPONSE restart(uint8_t addr, I2C_RW rw);
   void stop();
-  void ack();
-  void nack();
   I2C_RESPONSE write(uint8_t byte);
   uint8_t read();
+  I2C_RESPONSE write_bytes(uint8_t *send_data_ptr, uint8_t send_count);
+  I2C_RESPONSE read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count);
+  void ack();
+  void nack();
 
 private:
   uint32_t SCL_Pin;

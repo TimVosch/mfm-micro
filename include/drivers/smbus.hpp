@@ -47,8 +47,6 @@ private:
   uint8_t target;
 
   SMBUS_STATUS assert_pec();
-  I2C_RESPONSE i2c_write_bytes(uint8_t *send_data_ptr, uint8_t send_count);
-  I2C_RESPONSE i2c_read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count);
   SMBUS_STATUS write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count);
   SMBUS_STATUS read_bytes(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_count);
 };

@@ -323,7 +323,7 @@ SMBUS_STATUS SMBus::write_block(uint8_t command, uint8_t *buffer_ptr, uint8_t bu
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c_write_bytes(buffer_ptr, buffer_size);
+  res = i2c->write_bytes(buffer_ptr, buffer_size);
 
   i2c->stop();
   return (SMBUS_STATUS)res;
@@ -371,7 +371,7 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
   i2c->ack();
 
   // TODO: always returns ACK...?
-  i2c_read_bytes(recv_buffer_ptr, block_size);
+  i2c->read_bytes(recv_buffer_ptr, block_size);
   i2c->nack();
 
   i2c->stop();
@@ -403,7 +403,7 @@ SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *respo
   }
 
   // Send command and word through using the buffer
-  res = i2c_write_bytes(buffer, sizeof(buffer));
+  res = i2c->write_bytes(buffer, sizeof(buffer));
   if (res != I2C_RESPONSE_ACK)
   {
     return (SMBUS_STATUS)res;
@@ -416,7 +416,7 @@ SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *respo
   }
 
   // TODO: always returns ACK...?
-  i2c_read_bytes(buffer, 2);
+  i2c->read_bytes(buffer, 2);
   i2c->nack();
 
   // Build response
@@ -463,7 +463,7 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c_write_bytes(send_data_ptr, send_count);
+  res = i2c->write_bytes(send_data_ptr, send_count);
   if (res != I2C_RESPONSE_ACK)
   {
     i2c->stop();
@@ -489,7 +489,7 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
   i2c->ack();
 
   // TODO: always returns ACK...?
-  i2c_read_bytes(recv_buffer_ptr, block_size);
+  i2c->read_bytes(recv_buffer_ptr, block_size);
   i2c->nack();
 
   i2c->stop();
@@ -499,51 +499,6 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
 }
 
 // ---- private functions ----
-
-/**
- * @brief write multiple bytes
- * 
- * @param send_data_ptr buffer ptr with data to send
- * @param send_count 
- * @return SMBUS_STATUS 
- */
-I2C_RESPONSE SMBus::i2c_write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
-{
-  I2C_RESPONSE res;
-  for (uint8_t i = 0; i < send_count; i++)
-  {
-    res = i2c->write(*send_data_ptr++);
-    if (res != I2C_RESPONSE_ACK)
-    {
-      return res;
-    }
-  }
-
-  return res;
-}
-
-/**
- * @brief Receive multiple bytes
- * 
- * @param recv_buffer_ptr buffer ptr to store received bytes
- * @param recv_count  amount of bytes to receive
- * @return SMBUS_STATUS 
- */
-I2C_RESPONSE SMBus::i2c_read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
-{
-  for (uint8_t i = 0; i < recv_count; i++)
-  {
-    *(recv_buffer_ptr++) = i2c->read();
-
-    // Let the caller decide whether to (n)ack the last byte
-    if (i < recv_count - 1)
-    {
-      i2c->ack();
-    }
-  }
-
-  return I2C_RESPONSE_ACK;
-}
 
 /**
  * @brief Send a command and write an amount of bytes
@@ -569,7 +524,7 @@ SMBUS_STATUS SMBus::write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c_write_bytes(send_data_ptr, send_count);
+  res = i2c->write_bytes(send_data_ptr, send_count);
 
   i2c->stop();
   return (SMBUS_STATUS)res;
@@ -607,7 +562,7 @@ SMBUS_STATUS SMBus::read_bytes(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
   }
 
   // TODO: always returns ACK...?
-  i2c_read_bytes(recv_buffer_ptr, recv_count);
+  i2c->read_bytes(recv_buffer_ptr, recv_count);
   i2c->nack();
 
   i2c->stop();

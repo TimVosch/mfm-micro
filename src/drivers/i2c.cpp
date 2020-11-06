@@ -234,6 +234,51 @@ uint8_t I2CDriver::read()
   return data;
 }
 
+/**
+ * @brief write multiple bytes
+ * 
+ * @param send_data_ptr buffer ptr with data to send
+ * @param send_count 
+ * @return I2C_RESPONSE 
+ */
+I2C_RESPONSE I2CDriver::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
+{
+  I2C_RESPONSE res;
+  for (uint8_t i = 0; i < send_count; i++)
+  {
+    res = write(*send_data_ptr++);
+    if (res != I2C_RESPONSE_ACK)
+    {
+      return res;
+    }
+  }
+
+  return res;
+}
+
+/**
+ * @brief Receive multiple bytes
+ * 
+ * @param recv_buffer_ptr buffer ptr to store received bytes
+ * @param recv_count  amount of bytes to receive
+ * @return I2C_RESPONSE 
+ */
+I2C_RESPONSE I2CDriver::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
+{
+  for (uint8_t i = 0; i < recv_count; i++)
+  {
+    *(recv_buffer_ptr++) = read();
+
+    // Let the caller decide whether to (n)ack the last byte
+    if (i < recv_count - 1)
+    {
+      ack();
+    }
+  }
+
+  return I2C_RESPONSE_ACK;
+}
+
 //
 // (De)constructor
 //
