@@ -102,9 +102,6 @@ void I2CDriver::stop_condition()
     }
     scl_high();
   }
-
-  // Update state
-  state = I2C_DRIVER_STATE_STOPPED;
 }
 
 /**
@@ -249,8 +246,7 @@ I2CDriver::I2CDriver(uint32_t SCL_Pin,
                                            SCL_Port{SCL_Port},
                                            SDA_Pin{SDA_Pin},
                                            SDA_Port{SDA_Port},
-                                           timing{timing},
-                                           state{I2C_DRIVER_STATE_STOPPED}
+                                           timing{timing}
 {
   init_timer();
 }

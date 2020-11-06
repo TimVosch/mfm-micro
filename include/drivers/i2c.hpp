@@ -21,14 +21,6 @@ typedef enum
   I2C_RW_READ = 1,
 } I2C_RW;
 
-typedef enum
-{
-  I2C_DRIVER_STATE_STOPPED,
-  I2C_DRIVER_STATE_STARTED,
-  I2C_DRIVER_STATE_WRITING,
-  I2C_DRIVER_STATE_READING,
-} I2C_DRIVER_STATE;
-
 class I2CDriver
 {
 public:
@@ -49,7 +41,6 @@ private:
   uint32_t SDA_Pin;
   GPIO_TypeDef *SDA_Port;
   I2C_TIMING *timing;
-  I2C_DRIVER_STATE state;
 
   I2C_RESPONSE select(uint8_t addr, uint8_t rw);
   void start_condition(bool restart);
