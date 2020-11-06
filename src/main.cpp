@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "drivers/i2c_timing.hpp"
 #include "drivers/i2c.hpp"
+#include "drivers/smbus.hpp"
 
 void initGPIO()
 {
@@ -91,22 +92,14 @@ int main(void)
 
   I2C_TIMING standard = I2C_TIMING_STANDARD;
   I2CDriver i2c(I2C_SCL_Pin, I2C_SCL_Port, I2C_SDA_Pin, I2C_SDA_Port, &standard);
+  SMBus smbus(&i2c);
 
-  uint8_t data = 0;
+  smbus.select(0x70);
+  uint8_t send[3] = {0xAB, 0xCD, 0xEF};
+  uint8_t buf[0x80] = {0};
   for (;;)
   {
-
-    i2c.start(0x70, I2C_RW_WRITE);
-    i2c.write(0x53);
-    i2c.restart(0x70, I2C_RW_READ);
-    data = i2c.read();
-    i2c.nack();
-    i2c.stop();
-
-    if (data == 0x80)
-    {
-      HAL_GPIO_TogglePin(LED0_Port, LED0_Pin);
-    }
+    smbus.block_process_call(0x12, send, sizeof(send), buf, 0x80, nullptr);
 
     HAL_Delay(1000);
   }
