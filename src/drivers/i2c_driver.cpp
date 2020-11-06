@@ -1,4 +1,4 @@
-#include "i2c_driver.hpp"
+#include "drivers/i2c.hpp"
 
 void init_timer()
 {
@@ -21,29 +21,29 @@ void delay_us(uint16_t us)
 //
 // ---- Utility functions ----
 //
-GPIO_PinState I2CDriver::read_sda()
+uint8_t I2CDriver::read_sda()
 {
-  return HAL_GPIO_ReadPin(this->SDA_Port, this->SDA_Pin);
+  return (this->SDA_Port->IDR & this->SDA_Pin) > 0;
 }
-GPIO_PinState I2CDriver::read_scl()
+uint8_t I2CDriver::read_scl()
 {
-  return HAL_GPIO_ReadPin(this->SCL_Port, this->SCL_Pin);
+  return (this->SCL_Port->IDR & this->SCL_Pin) > 0;
 }
 void I2CDriver::sda_high()
 {
-  HAL_GPIO_WritePin(this->SDA_Port, this->SDA_Pin, GPIO_PIN_SET);
+  this->SDA_Port->BSRR = this->SDA_Pin;
 }
 void I2CDriver::scl_high()
 {
-  HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_SET);
+  this->SCL_Port->BSRR = this->SCL_Pin;
 }
 void I2CDriver::sda_low()
 {
-  HAL_GPIO_WritePin(this->SDA_Port, this->SDA_Pin, GPIO_PIN_RESET);
+  this->SDA_Port->BSRR = this->SDA_Pin << 16;
 }
 void I2CDriver::scl_low()
 {
-  HAL_GPIO_WritePin(this->SCL_Port, this->SCL_Pin, GPIO_PIN_RESET);
+  this->SCL_Port->BSRR = this->SCL_Pin << 16;
 }
 
 //
@@ -117,7 +117,7 @@ I2C_RESPONSE I2CDriver::get_ack()
   scl_high();
   clock_stretch(); // Allow clock stretching before ack
   delay_us(timing->high_period / 2);
-  GPIO_PinState sda = read_sda();
+  uint8_t sda = read_sda();
   delay_us(timing->high_period / 2);
   scl_low();
   delay_us(timing->data_hold);

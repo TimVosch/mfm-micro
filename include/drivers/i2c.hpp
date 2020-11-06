@@ -7,7 +7,7 @@
 #include <stm32l0xx_hal_tim.h>
 
 #include "main.hpp"
-#include "i2c_timing.h"
+#include "i2c_timing.hpp"
 
 typedef enum
 {
@@ -61,8 +61,8 @@ private:
   void scl_low();
   void sda_high();
   void sda_low();
-  GPIO_PinState read_sda();
-  GPIO_PinState read_scl();
+  uint8_t read_sda();
+  uint8_t read_scl();
 };
 
 #endif // _I2C_H_

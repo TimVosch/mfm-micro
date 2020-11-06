@@ -1,6 +1,6 @@
 #include "main.hpp"
-#include "i2c_timing.h"
-#include "i2c_driver.hpp"
+#include "drivers/i2c_timing.hpp"
+#include "drivers/i2c.hpp"
 
 void initGPIO()
 {
