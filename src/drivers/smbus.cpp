@@ -2,28 +2,35 @@
 
 // ---- Odd ones ----
 /**
- * @brief Trigger a device
+ * @brief Trigger a device quick command
+ * 
+ * In a quick command the RW bit denotes the command id
+ * this is limited to a 1 or a 0
  * 
  * @param address the device address
+ * @param command the short quick command id
  * @return SMBUS_STATUS 
  */
-SMBUS_STATUS SMBus::quick_command(uint8_t address)
+SMBUS_STATUS SMBus::quick_command(uint8_t address, uint8_t command)
 {
-  // Read Write bit is unused in this command
-  auto res = i2c->start(address, I2C_RW_WRITE);
+  auto res = i2c->start(address, (I2C_RW)(command & 1));
   i2c->stop();
   return (SMBUS_STATUS)res;
 }
 
 /**
- * @brief Trigger a device
+ * @brief Trigger a device quick command
+ * 
+ * In a quick command the RW bit denotes the command id
+ * this is limited to a 1 or a 0
  * 
  * @param address the device address
+ * @param command the short quick command id
  * @return SMBUS_STATUS 
  */
-SMBUS_STATUS SMBus::quick_command()
+SMBUS_STATUS SMBus::quick_command(uint8_t command)
 {
-  return quick_command(target);
+  return quick_command(target, command);
 }
 
 /**

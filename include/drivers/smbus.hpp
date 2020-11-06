@@ -20,8 +20,8 @@ public:
   ~SMBus();
 
   // ---- Odd ones ----
-  SMBUS_STATUS quick_command();
-  SMBUS_STATUS quick_command(uint8_t address);
+  SMBUS_STATUS quick_command(uint8_t command);
+  SMBUS_STATUS quick_command(uint8_t address, uint8_t command);
   SMBUS_STATUS send_byte(uint8_t data);
   SMBUS_STATUS receive_byte(uint8_t *response);
 
@@ -47,6 +47,7 @@ private:
   uint8_t target;
 
   SMBUS_STATUS assert_pec();
+  uint8_t generate_pec();
   SMBUS_STATUS write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count);
   SMBUS_STATUS read_bytes(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_count);
 };
