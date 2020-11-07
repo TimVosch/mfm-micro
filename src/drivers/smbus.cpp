@@ -45,18 +45,18 @@ SMBUS_STATUS SMBus::send_byte(uint8_t data)
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = i2c.write(data);
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = end();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 /**
@@ -71,13 +71,13 @@ SMBUS_STATUS SMBus::receive_byte(uint8_t *response)
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   i2c.read(response);
 
   res = end();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 // ---- These commands should be prepended by a select ----
@@ -106,11 +106,11 @@ SMBUS_STATUS SMBus::write_byte(uint8_t command, uint8_t data)
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
-  i2c.stop();
-  return SMBUS_STATUS_OK;
+  res = end();
+  return res;
 }
 
 /**
@@ -128,14 +128,13 @@ SMBUS_STATUS SMBus::read_byte(uint8_t command, uint8_t *response)
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   i2c.read(response);
-  i2c.ack();
 
-  i2c.stop();
-  return SMBUS_STATUS_OK;
+  res = end();
+  return res;
 }
 
 /**
@@ -295,13 +294,13 @@ SMBUS_STATUS SMBus::write_block(uint8_t command, uint8_t *buffer_ptr, uint8_t bu
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = i2c.write_bytes(buffer_ptr, buffer_size);
 
   i2c.stop();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 /**
@@ -320,7 +319,7 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   uint8_t block_size;
@@ -337,12 +336,11 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
 
   // TODO: always returns ACK...?
   i2c.read_bytes(recv_buffer_ptr, block_size);
-  i2c.nack();
 
   i2c.stop();
 
   *recv_count = block_size;
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 /**
@@ -364,31 +362,31 @@ SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *respo
   auto res = i2c.start(target, I2C_RW_WRITE, true);
   if (res != SMBUS_STATUS_OK)
   {
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   // Send command and word through using the buffer
   res = i2c.write_bytes(buffer, sizeof(buffer));
   if (res != SMBUS_STATUS_OK)
   {
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = i2c.restart(target, I2C_RW_READ);
   if (res != SMBUS_STATUS_OK)
   {
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   // TODO: always returns ACK...?
   i2c.read_bytes(buffer, 2);
-  i2c.nack();
+
+  i2c.stop();
 
   // Build response
   *response = ((uint16_t)buffer[0]) | (buffer[1] << 8);
 
-  i2c.stop();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 // Use the buffer for sending and receiving data?
@@ -413,14 +411,14 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = i2c.write_bytes(send_data_ptr, send_count);
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   // Read block
@@ -428,7 +426,7 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   uint8_t block_size;
@@ -444,12 +442,11 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
 
   // TODO: always returns ACK...?
   i2c.read_bytes(recv_buffer_ptr, block_size);
-  i2c.nack();
 
   i2c.stop();
 
   *recv_count = block_size;
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 // ---- private functions ----
@@ -474,7 +471,7 @@ SMBUS_STATUS SMBus::write_transaction(uint8_t command, uint8_t *send_data_ptr, u
   }
 
   res = end();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 /**
@@ -493,14 +490,14 @@ SMBUS_STATUS SMBus::read_transaction(uint8_t command, uint8_t *recv_buffer_ptr, 
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   // TODO: always returns ACK...?
   i2c.read_bytes(recv_buffer_ptr, recv_count);
 
   res = end();
-  return (SMBUS_STATUS)res;
+  return res;
 }
 
 SMBUS_STATUS SMBus::begin(uint8_t addr, uint8_t command)
@@ -509,43 +506,57 @@ SMBUS_STATUS SMBus::begin(uint8_t addr, uint8_t command)
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
   res = i2c.write(command);
   if (res != SMBUS_STATUS_OK)
   {
     i2c.stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
-  return SMBUS_STATUS_OK;
+  return res;
 }
 
 SMBUS_STATUS SMBus::end()
 {
   auto res = SMBUS_STATUS_OK;
-  if (target_pec)
+
+  // Resolve a pending read ack
+  if (i2c.get_direction() == I2C_RW_READ && i2c.is_ack_pending())
   {
-    if (rw == I2C_RW_WRITE)
+    // Expect PEC byte, so ack previous
+    if (target_pec)
     {
-      i2c.write(i2c.get_pec());
+      i2c.ack();
     }
-    else if (rw == I2C_RW_READ)
+    else
     {
-      uint8_t receiver_pec = i2c.get_pec();
-
-      uint8_t sender_pec;
-      i2c.read(&sender_pec);
-
-      if (receiver_pec != sender_pec)
-        res = SMBUS_STATUS_PEC_FAIL;
+      // No PEC byte will be sent, so previous byte was the last
+      i2c.nack();
     }
   }
 
-  if (rw == I2C_RW_READ)
+  // Append or verify PEC byte
+  if (target_pec)
   {
-    i2c.nack();
+    if (i2c.get_direction() == I2C_RW_WRITE)
+    {
+      res = i2c.write(i2c.get_pec());
+    }
+    else if (i2c.get_direction() == I2C_RW_READ)
+    {
+      uint8_t pec_secondary = i2c.get_pec();
+      uint8_t pec_primary;
+      i2c.read(&pec_primary);
+      i2c.nack(); // Last byte we expect so nack
+
+      if (pec_secondary != pec_primary)
+      {
+        res = SMBUS_STATUS_PEC_FAIL;
+      }
+    }
   }
 
   i2c.stop();

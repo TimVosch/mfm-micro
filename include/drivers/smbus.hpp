@@ -40,7 +40,6 @@ private:
   SMBus_I2C i2c;
   uint8_t target;
   bool target_pec = 1;
-  I2C_RW rw = I2C_RW_WRITE;
 
   SMBUS_STATUS write_transaction(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count);
   SMBUS_STATUS read_transaction(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_count);
