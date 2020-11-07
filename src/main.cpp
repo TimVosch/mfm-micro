@@ -43,6 +43,11 @@ void i2c_init()
   HAL_GPIO_WritePin(I2C_SCL_Port, I2C_SCL_Pin, GPIO_PIN_SET);
 }
 
+void crc_init()
+{
+  __HAL_RCC_CRC_CLK_ENABLE();
+}
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -89,17 +94,16 @@ int main(void)
   HAL_Init();
   initGPIO();
   i2c_init();
+  crc_init();
 
   I2C_TIMING standard = I2C_TIMING_STANDARD;
   I2CDriver i2c(I2C_SCL_Pin, I2C_SCL_Port, I2C_SDA_Pin, I2C_SDA_Port, &standard);
   SMBus smbus(&i2c);
 
   smbus.select(0x70);
-  uint8_t send[3] = {0xAB, 0xCD, 0xEF};
-  uint8_t buf[0x80] = {0};
   for (;;)
   {
-    smbus.block_process_call(0x12, send, sizeof(send), buf, 0x80, nullptr);
+    smbus.write_32(0xab, 0x01020304);
 
     HAL_Delay(1000);
   }

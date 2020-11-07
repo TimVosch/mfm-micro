@@ -238,7 +238,7 @@ uint8_t I2CDriver::read()
  * @brief write multiple bytes
  * 
  * @param send_data_ptr buffer ptr with data to send
- * @param send_count 
+ * @param send_count the amount of bytes to send
  * @return I2C_RESPONSE 
  */
 I2C_RESPONSE I2CDriver::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)

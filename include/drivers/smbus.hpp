@@ -2,6 +2,8 @@
 #define _SMBUS_DRIVER_H_
 
 #include <stdint.h>
+#include <stm32l0xx_hal_crc.h>
+
 #include "i2c.hpp"
 
 typedef enum
@@ -45,11 +47,25 @@ public:
 private:
   I2CDriver *i2c;
   uint8_t target;
+  bool target_pec = 1;
+  I2C_RW rw = I2C_RW_WRITE;
 
-  SMBUS_STATUS assert_pec();
-  uint8_t generate_pec();
   SMBUS_STATUS write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count);
   SMBUS_STATUS read_bytes(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_count);
+
+  void crc_reset();
+  uint8_t crc_read();
+
+  SMBUS_STATUS start_command(uint8_t addr, uint8_t command);
+  SMBUS_STATUS end_command();
+
+  // "intercepts" a read/write to the i2c driver to update the CRC-8
+  SMBUS_STATUS i2c_start(uint8_t addr, I2C_RW rw);
+  SMBUS_STATUS i2c_restart(uint8_t addr, I2C_RW rw);
+  SMBUS_STATUS i2c_write(uint8_t byte);
+  uint8_t i2c_read();
+  SMBUS_STATUS i2c_write_bytes(uint8_t *send_data_ptr, uint8_t send_count);
+  SMBUS_STATUS i2c_read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count);
 };
 
 #endif // _SMBUS_DRIVER_H_

@@ -1,5 +1,39 @@
 #include "drivers/smbus.hpp"
 
+// ---- utility ----
+void __crc_reset()
+{
+  CRC->CR = CRC_POLYLENGTH_8B;
+  CRC->INIT = 0;
+  CRC->POL = 0b100000111;
+  CRC->CR |= CRC_CR_RESET;
+
+  /*
+    CRC is very sensitive to clock cycles so if you're
+    not getting the checksum you expected, try inserting
+    random nops (no-operation) to wait a clock cycle.
+  */
+  // __asm("nop");
+}
+
+void __crc_write(uint8_t byte)
+{
+  /*
+    Writing 32-bit values to the data register will mess
+    up the configuration. The CRC hw will think you're
+    trying to checksum a 32 bit value which you are not.
+
+    Cast it to a uint8_t pointer to write 8-bit only.
+  */
+  *((uint8_t *)&CRC->DR) = byte;
+  // __asm("nop");
+}
+
+uint8_t __crc_read()
+{
+  return *((uint8_t *)&CRC->DR);
+}
+
 // ---- Odd ones ----
 /**
  * @brief Trigger a device quick command
@@ -13,7 +47,7 @@
  */
 SMBUS_STATUS SMBus::quick_command(uint8_t address, uint8_t command)
 {
-  auto res = i2c->start(address, (I2C_RW)(command & 1));
+  auto res = i2c_start(address, (I2C_RW)(command & 1));
   i2c->stop();
   return (SMBUS_STATUS)res;
 }
@@ -41,16 +75,22 @@ SMBUS_STATUS SMBus::quick_command(uint8_t command)
  */
 SMBUS_STATUS SMBus::send_byte(uint8_t data)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  crc_reset();
+  auto res = i2c_start(target, I2C_RW_WRITE);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  i2c->write(data);
+  res = i2c_write(data);
+  if (res != SMBUS_STATUS_OK)
+  {
+    i2c->stop();
+    return (SMBUS_STATUS)res;
+  }
 
-  i2c->stop();
+  res = end_command();
   return (SMBUS_STATUS)res;
 }
 
@@ -62,14 +102,15 @@ SMBUS_STATUS SMBus::send_byte(uint8_t data)
  */
 SMBUS_STATUS SMBus::receive_byte(uint8_t *response)
 {
-  auto res = i2c->start(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
+  crc_reset();
+  auto res = i2c_start(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  *response = i2c->read();
+  *response = i2c_read();
   i2c->ack();
 
   i2c->stop();
@@ -96,22 +137,10 @@ void SMBus::select(uint8_t address)
  */
 SMBUS_STATUS SMBus::write_byte(uint8_t command, uint8_t data)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
+  auto res = start_command(target, command);
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->write(data);
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_write(data);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
@@ -130,28 +159,16 @@ SMBUS_STATUS SMBus::write_byte(uint8_t command, uint8_t data)
  */
 SMBUS_STATUS SMBus::read_byte(uint8_t command, uint8_t *response)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  auto res = start_command(target, command);
+
+  res = i2c_restart(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->restart(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  *response = i2c->read();
+  *response = i2c_read();
   i2c->ack();
 
   i2c->stop();
@@ -309,28 +326,16 @@ SMBUS_STATUS SMBus::read_64(uint8_t command, uint64_t *response)
  */
 SMBUS_STATUS SMBus::write_block(uint8_t command, uint8_t *buffer_ptr, uint8_t buffer_size)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  auto res = start_command(target, command);
+
+  res = i2c_write(buffer_size);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->write(buffer_size);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->write_bytes(buffer_ptr, buffer_size);
+  res = i2c_write_bytes(buffer_ptr, buffer_size);
 
   i2c->stop();
   return (SMBUS_STATUS)res;
@@ -346,28 +351,16 @@ SMBUS_STATUS SMBus::write_block(uint8_t command, uint8_t *buffer_ptr, uint8_t bu
  */
 SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_buffer_size, uint8_t *recv_count)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  auto res = start_command(target, command);
+
+  i2c_restart(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  i2c->restart(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  uint8_t block_size = i2c->read();
+  uint8_t block_size = i2c_read();
   // Trying to receive more bytes than the buffer is long
   if (block_size > recv_buffer_size)
   {
@@ -378,7 +371,7 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
   i2c->ack();
 
   // TODO: always returns ACK...?
-  i2c->read_bytes(recv_buffer_ptr, block_size);
+  i2c_read_bytes(recv_buffer_ptr, block_size);
   i2c->nack();
 
   i2c->stop();
@@ -397,33 +390,34 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
  */
 SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *response)
 {
+  crc_reset();
   uint8_t buffer[3] = {
       command,
       (uint8_t)data,
       (uint8_t)(data >> 8),
   };
 
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  auto res = i2c_start(target, I2C_RW_WRITE);
+  if (res != SMBUS_STATUS_OK)
   {
     return (SMBUS_STATUS)res;
   }
 
   // Send command and word through using the buffer
-  res = i2c->write_bytes(buffer, sizeof(buffer));
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_write_bytes(buffer, sizeof(buffer));
+  if (res != SMBUS_STATUS_OK)
   {
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c->restart(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_restart(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     return (SMBUS_STATUS)res;
   }
 
   // TODO: always returns ACK...?
-  i2c->read_bytes(buffer, 2);
+  i2c_read_bytes(buffer, 2);
   i2c->nack();
 
   // Build response
@@ -447,45 +441,33 @@ SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *respo
  */
 SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count, uint8_t *recv_buffer_ptr, uint8_t recv_buffer_size, uint8_t *recv_count)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
+  auto res = start_command(target, command);
 
   // Write block
 
-  res = i2c->write(send_count);
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_write(send_count);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  res = i2c->write_bytes(send_data_ptr, send_count);
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_write_bytes(send_data_ptr, send_count);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
   // Read block
-  res = i2c->restart(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
+  res = i2c_restart(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
-  uint8_t block_size = i2c->read();
+  uint8_t block_size = i2c_read();
   // Trying to receive more bytes than the buffer is long
   if (block_size > recv_buffer_size)
   {
@@ -496,7 +478,7 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
   i2c->ack();
 
   // TODO: always returns ACK...?
-  i2c->read_bytes(recv_buffer_ptr, block_size);
+  i2c_read_bytes(recv_buffer_ptr, block_size);
   i2c->nack();
 
   i2c->stop();
@@ -517,23 +499,16 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
  */
 SMBUS_STATUS SMBus::write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t send_count)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
+  auto res = start_command(target, command);
+
+  res = i2c_write_bytes(send_data_ptr, send_count);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
-    return (SMBUS_STATUS)res;
+    return res;
   }
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  res = i2c->write_bytes(send_data_ptr, send_count);
-
-  i2c->stop();
+  res = end_command();
   return (SMBUS_STATUS)res;
 }
 
@@ -547,33 +522,160 @@ SMBUS_STATUS SMBus::write_bytes(uint8_t command, uint8_t *send_data_ptr, uint8_t
  */
 SMBUS_STATUS SMBus::read_bytes(uint8_t command, uint8_t *recv_buffer_ptr, uint8_t recv_count)
 {
-  auto res = i2c->start(target, I2C_RW_WRITE);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
+  auto res = start_command(target, command);
 
-  res = i2c->write(command);
-  if (res != I2C_RESPONSE_ACK)
-  {
-    i2c->stop();
-    return (SMBUS_STATUS)res;
-  }
-
-  i2c->restart(target, I2C_RW_READ);
-  if (res != I2C_RESPONSE_ACK)
+  i2c_restart(target, I2C_RW_READ);
+  if (res != SMBUS_STATUS_OK)
   {
     i2c->stop();
     return (SMBUS_STATUS)res;
   }
 
   // TODO: always returns ACK...?
-  i2c->read_bytes(recv_buffer_ptr, recv_count);
-  i2c->nack();
+  i2c_read_bytes(recv_buffer_ptr, recv_count);
 
-  i2c->stop();
+  res = end_command();
   return (SMBUS_STATUS)res;
+}
+
+void SMBus::crc_reset()
+{
+  __crc_reset();
+}
+
+uint8_t SMBus::crc_read()
+{
+  return __crc_read();
+}
+
+SMBUS_STATUS SMBus::start_command(uint8_t addr, uint8_t command)
+{
+  crc_reset();
+  auto res = i2c_start(target, I2C_RW_WRITE);
+  if (res != SMBUS_STATUS_OK)
+  {
+    i2c->stop();
+    return (SMBUS_STATUS)res;
+  }
+
+  res = i2c_write(command);
+  if (res != SMBUS_STATUS_OK)
+  {
+    i2c->stop();
+    return (SMBUS_STATUS)res;
+  }
+
+  return SMBUS_STATUS_OK;
+}
+
+SMBUS_STATUS SMBus::end_command()
+{
+  auto res = SMBUS_STATUS_OK;
+  if (target_pec)
+  {
+    if (rw == I2C_RW_WRITE)
+    {
+      i2c->write(crc_read());
+    }
+    else if (rw == I2C_RW_READ)
+    {
+      uint8_t receiver_pec = crc_read();
+      uint8_t sender_pec = i2c->read();
+      if (receiver_pec != sender_pec)
+        res = SMBUS_STATUS_PEC_FAIL;
+      i2c->nack();
+    }
+  }
+  i2c->stop();
+  return res;
+}
+
+SMBUS_STATUS SMBus::i2c_start(uint8_t addr, I2C_RW rw)
+{
+  if (target_pec)
+    __crc_write((addr << 1) | (rw & 1));
+
+  this->rw = rw;
+  return (SMBUS_STATUS)i2c->start(addr, rw);
+}
+
+SMBUS_STATUS SMBus::i2c_restart(uint8_t addr, I2C_RW rw)
+{
+  if (target_pec)
+    __crc_write((addr << 1) | (rw & 1));
+
+  this->rw = rw;
+  return (SMBUS_STATUS)i2c->restart(addr, rw);
+}
+
+/**
+ * @brief write a byte to the i2c bus and update the PEC
+ * 
+ * @param byte 
+ * @return SMBUS_STATUS 
+ */
+SMBUS_STATUS SMBus::i2c_write(uint8_t byte)
+{
+  if (target_pec)
+    __crc_write(byte);
+
+  return (SMBUS_STATUS)i2c->write(byte);
+}
+
+/**
+ * @brief read a byte from the i2c bus and update the PEC
+ * 
+ * @return uint8_t 
+ */
+uint8_t SMBus::i2c_read()
+{
+  uint8_t data = i2c->read();
+
+  if (target_pec)
+    __crc_write(data);
+
+  return data;
+}
+
+/**
+ * @brief write multiple bytes to the i2c bus and update the PEC
+ * 
+ * @param send_data_ptr buffer ptr with data to send
+ * @param send_count the amount of bytes to send
+ * @return SMBUS_STATUS 
+ */
+SMBUS_STATUS SMBus::i2c_write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
+{
+  if (target_pec)
+  {
+    for (uint8_t i = 0; i < send_count; i++)
+    {
+      __crc_write(*(send_data_ptr + i));
+    }
+  }
+
+  return (SMBUS_STATUS)i2c->write_bytes(send_data_ptr, send_count);
+}
+
+/**
+ * @brief read multiple bytes from the i2c bus and update the PEC
+ * 
+ * @param recv_buffer_ptr buffer ptr to store received bytes
+ * @param recv_count amount of bytes to receive
+ * @return SMBUS_STATUS 
+ */
+SMBUS_STATUS SMBus::i2c_read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
+{
+  auto res = (SMBUS_STATUS)i2c->read_bytes(recv_buffer_ptr, recv_count);
+
+  if (target_pec)
+  {
+    for (uint8_t i = 0; i < recv_count; i++)
+    {
+      __crc_write(*(recv_buffer_ptr + i));
+    }
+  }
+  return res;
 }
 
 // ---- (De)constructor ----
