@@ -25,11 +25,13 @@ public:
   void nack();
 
   uint8_t get_pec();
+  I2C_RW get_direction();
+  bool is_ack_pending();
 
 private:
   I2CDriver *i2c;
-  I2C_RW cur_dir = I2C_RW_WRITE;
-  bool pend_ack = false;
+  I2C_RW current_direction = I2C_RW_WRITE;
+  bool pending_ack = false;
 };
 
 #endif // _SMBUS_I2C_H_

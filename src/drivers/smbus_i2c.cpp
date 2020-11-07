@@ -43,8 +43,8 @@ SMBus_I2C::~SMBus_I2C()
 
 SMBUS_STATUS SMBus_I2C::start(uint8_t addr, I2C_RW rw, bool pec)
 {
-  cur_dir = rw;
-  pend_ack = false;
+  current_direction = rw;
+  pending_ack = false;
   pec_enabled = pec;
 
   if (pec_enabled)
@@ -62,7 +62,7 @@ SMBUS_STATUS SMBus_I2C::start(uint8_t addr, I2C_RW rw)
 
 SMBUS_STATUS SMBus_I2C::restart(uint8_t addr, I2C_RW rw)
 {
-  cur_dir = rw;
+  current_direction = rw;
 
   if (pec_enabled)
     __crc_write((addr << 1) | (rw & 1));
@@ -93,7 +93,7 @@ SMBUS_STATUS SMBus_I2C::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
 SMBUS_STATUS SMBus_I2C::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
 {
   auto res = (SMBUS_STATUS)i2c->read_bytes(recv_buffer_ptr, recv_count);
-  pend_ack = true;
+  pending_ack = true;
 
   if (pec_enabled)
   {
@@ -108,7 +108,7 @@ SMBUS_STATUS SMBus_I2C::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
 SMBUS_STATUS SMBus_I2C::read(uint8_t *response)
 {
   uint8_t data = i2c->read();
-  pend_ack = true;
+  pending_ack = true;
 
   if (pec_enabled)
     __crc_write(data);
@@ -121,22 +121,34 @@ SMBUS_STATUS SMBus_I2C::read(uint8_t *response)
 void SMBus_I2C::stop()
 {
   i2c->stop();
-  pend_ack = false;
+  pending_ack = false;
 }
 
 void SMBus_I2C::ack()
 {
   i2c->ack();
-  pend_ack = false;
+  pending_ack = false;
 }
 
 void SMBus_I2C::nack()
 {
   i2c->nack();
-  pend_ack = false;
+  pending_ack = false;
 }
+
+// ---- Getter and setters ----
 
 uint8_t SMBus_I2C::get_pec()
 {
   return __crc_read();
+}
+
+I2C_RW SMBus_I2C::get_direction()
+{
+  return current_direction;
+}
+
+bool SMBus_I2C::is_ack_pending()
+{
+  return pending_ack;
 }
