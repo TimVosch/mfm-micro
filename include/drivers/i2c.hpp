@@ -38,24 +38,28 @@ public:
   void nack();
 
 private:
+  // IO configuration
   uint32_t SCL_Pin;
   GPIO_TypeDef *SCL_Port;
   uint32_t SDA_Pin;
   GPIO_TypeDef *SDA_Port;
+
   I2C_TIMING *timing;
 
-  I2C_RESPONSE select(uint8_t addr, uint8_t rw);
-  void start_condition(bool restart);
-  void stop_condition();
-  I2C_RESPONSE get_ack();
-  void clock_stretch();
-
+  // Low level io functions
   void scl_high();
   void scl_low();
   void sda_high();
   void sda_low();
   uint8_t read_sda();
   uint8_t read_scl();
+
+  //
+  I2C_RESPONSE select(uint8_t addr, uint8_t rw);
+  void start_condition(bool restart);
+  void stop_condition();
+  I2C_RESPONSE get_ack();
+  void clock_stretch();
 };
 
 #endif // _I2C_H_

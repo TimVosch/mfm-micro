@@ -111,9 +111,8 @@ SMBUS_STATUS SMBus::receive_byte(uint8_t *response)
   }
 
   *response = i2c_read();
-  i2c->ack();
 
-  i2c->stop();
+  res = end_command();
   return (SMBUS_STATUS)res;
 }
 
@@ -583,9 +582,14 @@ SMBUS_STATUS SMBus::end_command()
       uint8_t sender_pec = i2c->read();
       if (receiver_pec != sender_pec)
         res = SMBUS_STATUS_PEC_FAIL;
-      i2c->nack();
     }
   }
+
+  if (rw == I2C_RW_READ)
+  {
+    i2c->nack();
+  }
+
   i2c->stop();
   return res;
 }
