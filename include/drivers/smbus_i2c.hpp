@@ -28,6 +28,8 @@ public:
 
 private:
   I2CDriver *i2c;
+  I2C_RW cur_dir = I2C_RW_WRITE;
+  bool pend_ack = false;
 };
 
 #endif // _SMBUS_I2C_H_
