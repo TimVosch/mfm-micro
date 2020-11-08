@@ -45,6 +45,7 @@ void I2CDriver::sda_high()
 void I2CDriver::scl_high()
 {
   this->SCL_Port->BSRR = this->SCL_Pin;
+  clock_stretch();
 }
 void I2CDriver::sda_low()
 {
@@ -117,7 +118,6 @@ I2C_RESPONSE I2CDriver::get_ack()
   // 9th Clock cycle
   sda_high();
   scl_high();
-  clock_stretch(); // Allow clock stretching before ack
   delay_us(timing->high_period / 2);
   uint8_t sda = read_sda();
   delay_us(timing->high_period / 2);
@@ -225,7 +225,6 @@ uint8_t I2CDriver::read()
   {
     delay_us(timing->low_period);
     scl_high();
-    clock_stretch();
 
     // Insert high bit
     if (read_sda())
