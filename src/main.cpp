@@ -1,6 +1,6 @@
 #include "main.hpp"
 #include "drivers/i2c_timing.hpp"
-#include "drivers/i2c.hpp"
+#include "drivers/i2c_master.hpp"
 #include "drivers/smbus.hpp"
 
 void gpio_init()
@@ -103,7 +103,7 @@ int main(void)
   crc_init();
 
   I2C_TIMING standard = I2C_TIMING_STANDARD;
-  I2CDriver i2c(I2C_SCL_Pin, I2C_SCL_Port, I2C_SDA_Pin, I2C_SDA_Port, &standard);
+  I2C_Master i2c(I2C_SCL_Pin, I2C_SCL_Port, I2C_SDA_Pin, I2C_SDA_Port, &standard);
   SMBus smbus(&i2c);
 
   smbus.select(0x70);

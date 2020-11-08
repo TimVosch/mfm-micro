@@ -34,7 +34,7 @@ uint8_t __crc_read()
   return *((uint8_t *)&CRC->DR);
 }
 
-SMBus_I2C::SMBus_I2C(I2CDriver *i2c) : i2c{i2c}
+SMBus_I2C::SMBus_I2C(I2C_Master *i2c) : i2c{i2c}
 {
 }
 SMBus_I2C::~SMBus_I2C()

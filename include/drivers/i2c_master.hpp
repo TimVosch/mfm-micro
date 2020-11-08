@@ -21,11 +21,11 @@ typedef enum
   I2C_RW_READ = 1,
 } I2C_RW;
 
-class I2CDriver
+class I2C_Master
 {
 public:
-  I2CDriver(uint32_t SCL_Pin, GPIO_TypeDef *SCL_Port, uint32_t SDA_Pin, GPIO_TypeDef *SDA_Port, I2C_TIMING *timing);
-  ~I2CDriver();
+  I2C_Master(uint32_t SCL_Pin, GPIO_TypeDef *SCL_Port, uint32_t SDA_Pin, GPIO_TypeDef *SDA_Port, I2C_TIMING *timing);
+  ~I2C_Master();
 
   I2C_RESPONSE start(uint8_t addr, I2C_RW rw);
   I2C_RESPONSE restart(uint8_t addr, I2C_RW rw);

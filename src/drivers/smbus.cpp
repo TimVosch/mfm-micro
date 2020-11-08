@@ -565,7 +565,7 @@ SMBUS_STATUS SMBus::end()
 
 // ---- (De)constructor ----
 
-SMBus::SMBus(I2CDriver *i2c_driver) : i2c(i2c_driver)
+SMBus::SMBus(I2C_Master *i2c_driver) : i2c(i2c_driver)
 {
 }
 SMBus::~SMBus()

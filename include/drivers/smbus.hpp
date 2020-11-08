@@ -10,7 +10,7 @@
 class SMBus
 {
 public:
-  SMBus(I2CDriver *i2c_driver);
+  SMBus(I2C_Master *i2c_driver);
   ~SMBus();
 
   // ---- Odd ones ----

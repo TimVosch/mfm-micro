@@ -3,14 +3,14 @@
 
 #include <stdint.h>
 #include "smbus_constant.hpp"
-#include "i2c.hpp"
+#include "i2c_master.hpp"
 
 class SMBus_I2C
 {
 public:
   bool pec_enabled = 0;
 
-  SMBus_I2C(I2CDriver *i2c);
+  SMBus_I2C(I2C_Master *i2c);
   ~SMBus_I2C();
 
   SMBUS_STATUS start(uint8_t addr, I2C_RW rw, bool pec);
@@ -29,7 +29,7 @@ public:
   bool is_ack_pending();
 
 private:
-  I2CDriver *i2c;
+  I2C_Master *i2c;
   I2C_RW current_direction = I2C_RW_WRITE;
   bool pending_ack = false;
 };

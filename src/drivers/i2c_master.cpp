@@ -1,4 +1,4 @@
-#include "drivers/i2c.hpp"
+#include "drivers/i2c_master.hpp"
 
 void init_timer()
 {
@@ -30,28 +30,28 @@ void delay_us(uint16_t _us)
 //
 // ---- Utility functions ----
 //
-uint8_t I2CDriver::read_sda()
+uint8_t I2C_Master::read_sda()
 {
   return (this->SDA_Port->IDR & this->SDA_Pin);
 }
-uint8_t I2CDriver::read_scl()
+uint8_t I2C_Master::read_scl()
 {
   return (this->SCL_Port->IDR & this->SCL_Pin);
 }
-void I2CDriver::sda_high()
+void I2C_Master::sda_high()
 {
   this->SDA_Port->BSRR = this->SDA_Pin;
 }
-void I2CDriver::scl_high()
+void I2C_Master::scl_high()
 {
   this->SCL_Port->BSRR = this->SCL_Pin;
   clock_stretch();
 }
-void I2CDriver::sda_low()
+void I2C_Master::sda_low()
 {
   this->SDA_Port->BSRR = this->SDA_Pin << 16;
 }
-void I2CDriver::scl_low()
+void I2C_Master::scl_low()
 {
   this->SCL_Port->BSRR = this->SCL_Pin << 16;
 }
@@ -63,7 +63,7 @@ void I2CDriver::scl_low()
 /**
  * Wait for SCL to go high
  */
-void I2CDriver::clock_stretch()
+void I2C_Master::clock_stretch()
 {
   // Wait for clock to go high
   // or the timeout timer to trigger
@@ -72,7 +72,7 @@ void I2CDriver::clock_stretch()
     ;
 }
 
-void I2CDriver::start_condition(bool restart)
+void I2C_Master::start_condition(bool restart)
 {
   // Repeated start
   if (restart)
@@ -88,7 +88,7 @@ void I2CDriver::start_condition(bool restart)
   scl_low();
 }
 
-void I2CDriver::stop_condition()
+void I2C_Master::stop_condition()
 {
   sda_low();
   scl_high();
@@ -113,7 +113,7 @@ void I2CDriver::stop_condition()
 /**
  * Clock in the 9th clock cycle and read the ack bit
  */
-I2C_RESPONSE I2CDriver::get_ack()
+I2C_RESPONSE I2C_Master::get_ack()
 {
   // 9th Clock cycle
   sda_high();
@@ -131,7 +131,7 @@ I2C_RESPONSE I2CDriver::get_ack()
   return I2C_RESPONSE_NACK;
 }
 
-I2C_RESPONSE I2CDriver::select(uint8_t addr, uint8_t rw)
+I2C_RESPONSE I2C_Master::select(uint8_t addr, uint8_t rw)
 {
   uint8_t data = (addr << 1) | rw;
   return write(data);
@@ -141,7 +141,7 @@ I2C_RESPONSE I2CDriver::select(uint8_t addr, uint8_t rw)
 // ---- Public functions ----
 //
 
-void I2CDriver::ack()
+void I2C_Master::ack()
 {
 
   // ACk message
@@ -152,7 +152,7 @@ void I2CDriver::ack()
   sda_high();
 }
 
-void I2CDriver::nack()
+void I2C_Master::nack()
 {
   // ACk message
   sda_high();
@@ -161,19 +161,19 @@ void I2CDriver::nack()
   scl_low();
 }
 
-I2C_RESPONSE I2CDriver::start(uint8_t addr, I2C_RW rw)
+I2C_RESPONSE I2C_Master::start(uint8_t addr, I2C_RW rw)
 {
   start_condition(false);
   return select(addr, rw);
 }
 
-I2C_RESPONSE I2CDriver::restart(uint8_t addr, I2C_RW rw)
+I2C_RESPONSE I2C_Master::restart(uint8_t addr, I2C_RW rw)
 {
   start_condition(true);
   return select(addr, rw);
 }
 
-void I2CDriver::stop()
+void I2C_Master::stop()
 {
   stop_condition();
 }
@@ -184,7 +184,7 @@ void I2CDriver::stop()
  * @param byte The byte to send
  * @return I2C_RESPONSE
  */
-I2C_RESPONSE I2CDriver::write(uint8_t data)
+I2C_RESPONSE I2C_Master::write(uint8_t data)
 {
   // Send 8 bits
   for (int i = 0; i < 8; i++)
@@ -218,7 +218,7 @@ I2C_RESPONSE I2CDriver::write(uint8_t data)
  * @param byte The byte to send
  * @return I2C_RESPONSE
  */
-uint8_t I2CDriver::read()
+uint8_t I2C_Master::read()
 {
   uint8_t data = 0;
   for (uint8_t bit_pos = 8; bit_pos > 0; bit_pos--)
@@ -245,7 +245,7 @@ uint8_t I2CDriver::read()
  * @param send_count the amount of bytes to send
  * @return I2C_RESPONSE 
  */
-I2C_RESPONSE I2CDriver::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
+I2C_RESPONSE I2C_Master::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
 {
   I2C_RESPONSE res;
   for (uint8_t i = 0; i < send_count; i++)
@@ -267,7 +267,7 @@ I2C_RESPONSE I2CDriver::write_bytes(uint8_t *send_data_ptr, uint8_t send_count)
  * @param recv_count  amount of bytes to receive
  * @return I2C_RESPONSE 
  */
-I2C_RESPONSE I2CDriver::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
+I2C_RESPONSE I2C_Master::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
 {
   for (uint8_t i = 0; i < recv_count; i++)
   {
@@ -287,18 +287,18 @@ I2C_RESPONSE I2CDriver::read_bytes(uint8_t *recv_buffer_ptr, uint8_t recv_count)
 // (De)constructor
 //
 
-I2CDriver::I2CDriver(uint32_t SCL_Pin,
-                     GPIO_TypeDef *SCL_Port,
-                     uint32_t SDA_Pin,
-                     GPIO_TypeDef *SDA_Port,
-                     I2C_TIMING *timing) : SCL_Pin{SCL_Pin},
-                                           SCL_Port{SCL_Port},
-                                           SDA_Pin{SDA_Pin},
-                                           SDA_Port{SDA_Port},
-                                           timing{timing}
+I2C_Master::I2C_Master(uint32_t SCL_Pin,
+                       GPIO_TypeDef *SCL_Port,
+                       uint32_t SDA_Pin,
+                       GPIO_TypeDef *SDA_Port,
+                       I2C_TIMING *timing) : SCL_Pin{SCL_Pin},
+                                             SCL_Port{SCL_Port},
+                                             SDA_Pin{SDA_Pin},
+                                             SDA_Port{SDA_Port},
+                                             timing{timing}
 {
   init_timer();
 }
-I2CDriver::~I2CDriver()
+I2C_Master::~I2C_Master()
 {
 }
