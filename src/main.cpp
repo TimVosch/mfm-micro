@@ -3,7 +3,7 @@
 #include "drivers/i2c.hpp"
 #include "drivers/smbus.hpp"
 
-void initGPIO()
+void gpio_init()
 {
   // Enable GPIO CLK
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -15,13 +15,8 @@ void initGPIO()
   GPIO_LED.Speed = GPIO_SPEED_FAST;
   GPIO_LED.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(LED0_Port, &GPIO_LED);
-}
 
-/**
- * Setup GPIO pins
- */
-void i2c_init()
-{
+  // ---- Initialize I2C GPIO pins ----
   // Init SCL to OpenDrain
   GPIO_InitTypeDef scl_init = {0};
   scl_init.Pin = I2C_SCL_Pin;
@@ -46,6 +41,17 @@ void i2c_init()
 void crc_init()
 {
   __HAL_RCC_CRC_CLK_ENABLE();
+}
+
+void timer_init()
+{
+  // Set TIMER 6 to us
+  uint8_t psc = SystemCoreClock / 1e6 - 1;
+  __HAL_RCC_TIM6_CLK_ENABLE();
+  TIM6->SR = 0;
+  TIM6->PSC = psc;
+  TIM6->CR1 = TIM_CR1_UDIS;
+  TIM6->CR1 = TIM_CR1_CEN;
 }
 
 /**
@@ -92,8 +98,8 @@ int main(void)
 {
   SystemClock_Config();
   HAL_Init();
-  initGPIO();
-  i2c_init();
+  gpio_init();
+  timer_init();
   crc_init();
 
   I2C_TIMING standard = I2C_TIMING_STANDARD;
@@ -103,7 +109,12 @@ int main(void)
   smbus.select(0x70);
   for (;;)
   {
-    smbus.write_32(0xab, 0x01020304);
+    uint8_t data;
+    auto res = smbus.receive_byte(&data);
+    if (res == SMBUS_STATUS_PEC_FAIL)
+    {
+      HAL_GPIO_TogglePin(LED0_Port, LED0_Pin);
+    }
 
     HAL_Delay(1000);
   }
