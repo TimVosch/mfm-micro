@@ -11,9 +11,18 @@ void init_timer()
   TIM6->CR1 = TIM_CR1_CEN;
 }
 
-void delay_us(uint16_t us)
+void delay_us(uint16_t _us)
 {
   TIM6->CNT = 0;
+  uint16_t us = _us;
+  if (us <= 2)
+  {
+    return;
+  }
+  else
+  {
+    us -= 2;
+  }
   while (TIM6->CNT < us)
     ;
 }
@@ -23,11 +32,11 @@ void delay_us(uint16_t us)
 //
 uint8_t I2CDriver::read_sda()
 {
-  return (this->SDA_Port->IDR & this->SDA_Pin) > 0;
+  return (this->SDA_Port->IDR & this->SDA_Pin);
 }
 uint8_t I2CDriver::read_scl()
 {
-  return (this->SCL_Port->IDR & this->SCL_Pin) > 0;
+  return (this->SCL_Port->IDR & this->SCL_Pin);
 }
 void I2CDriver::sda_high()
 {
@@ -57,12 +66,8 @@ void I2CDriver::clock_stretch()
 {
   // Wait for clock to go high
   // or the timeout timer to trigger
-  TIM6->SR = 0;
-  // TIM6->ARR = timing->clock_stretch;
-  TIM6->ARR = 0xFF;
   TIM6->CNT = 0;
-  TIM6->CR1 |= TIM_CR1_CEN;
-  while (!read_scl() && !(TIM6->SR & TIM_SR_UIF))
+  while (!read_scl() && TIM6->CNT < timing->clock_stretch)
     ;
 }
 
