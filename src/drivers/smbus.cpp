@@ -298,8 +298,13 @@ SMBUS_STATUS SMBus::write_block(uint8_t command, uint8_t *buffer_ptr, uint8_t bu
   }
 
   res = i2c.write_bytes(buffer_ptr, buffer_size);
+  if (res != SMBUS_STATUS_OK)
+  {
+    i2c.stop();
+    return res;
+  }
 
-  i2c.stop();
+  res = end();
   return res;
 }
 
@@ -337,7 +342,7 @@ SMBUS_STATUS SMBus::read_block(uint8_t command, uint8_t *recv_buffer_ptr, uint8_
   // TODO: always returns ACK...?
   i2c.read_bytes(recv_buffer_ptr, block_size);
 
-  i2c.stop();
+  res = end();
 
   *recv_count = block_size;
   return res;
@@ -381,7 +386,7 @@ SMBUS_STATUS SMBus::process_call(uint8_t command, uint16_t data, uint16_t *respo
   // TODO: always returns ACK...?
   i2c.read_bytes(buffer, 2);
 
-  i2c.stop();
+  res = end();
 
   // Build response
   *response = ((uint16_t)buffer[0]) | (buffer[1] << 8);
@@ -443,7 +448,7 @@ SMBUS_STATUS SMBus::block_process_call(uint8_t command, uint8_t *send_data_ptr, 
   // TODO: always returns ACK...?
   i2c.read_bytes(recv_buffer_ptr, block_size);
 
-  i2c.stop();
+  res = end();
 
   *recv_count = block_size;
   return res;
