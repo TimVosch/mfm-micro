@@ -24,7 +24,6 @@ SMBUS_STATUS SMBus::quick_command(uint8_t address, uint8_t command)
  * In a quick command the RW bit denotes the command id
  * this is limited to a 1 or a 0
  * 
- * @param address the device address
  * @param command the short quick command id
  * @return SMBUS_STATUS 
  */
